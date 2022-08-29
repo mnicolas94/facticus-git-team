@@ -1,6 +1,6 @@
-# {{FRIENDLY_NAME}}
+# Git Team
 
-{{DESCRIPTION}}
+Utils context menus for collaboration with git
 
 ## License
 

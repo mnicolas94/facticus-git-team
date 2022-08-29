@@ -1,5 +1,5 @@
 {
-    "name": "com.{{COMPANY}}.{{REPOSITORY_NAME}}",
+    "name": "com.facticus.git-team",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

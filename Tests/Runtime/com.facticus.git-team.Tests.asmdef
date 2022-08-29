@@ -1,7 +1,7 @@
 {
-  "name": "com.{{COMPANY}}.{{REPOSITORY_NAME}}.Editor.Tests",
+  "name": "com.facticus.git-team.Tests",
   "references": [
-    "com.{{COMPANY}}.{{REPOSITORY_NAME}}"
+    "Unity.com.facticus.git-team"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"
