@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using UnityEditor;
 using Utils.Editor;
 using Debug = UnityEngine.Debug;
@@ -10,51 +8,96 @@ namespace GitTeam.Editor
 {
     public static class GitTeamMenus
     {
+        private static List<string> _outputs;
+
+        private static void BeginOutputsLogging()
+        {
+            if (_outputs == null)
+            {
+                _outputs = new List<string>();
+            }
+            
+            _outputs.Clear();
+        }
+
+        private static void Log(string log)
+        {
+            _outputs.Add(log);
+        }
+
+        private static void EndOutputsLogging()
+        {
+            string bigLog = String.Join("\n", _outputs);
+            Debug.Log(bigLog);
+        }
+        
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
         public static void Pull()
         {
-            CommitCurrentChanges();
+            BeginOutputsLogging();
+            Log("--- PULL ---");
+            Log("");
+            bool success = CommitCurrentChanges();
+            EndOutputsLogging();
         }
 
-        private static void CommitCurrentChanges()
+        private static bool CommitCurrentChanges()
         {
+            Log("--- CommitCurrentChanges ---");
             // get user
             var userName = GitUtils.GetUserName();
-            var exists = GitTeamConfig.Instance.TryFindByName(userName, out var userData);
+            var existsUser = GitTeamConfig.Instance.TryFindByName(userName, out var userData);
 
-            if (!exists)
+            if (!existsUser)
             {
                 // mostrar error
-                Debug.Log($"User {userName} does not exists in GitTeam settings");
-                return;
+                Log($"User {userName} does not exist in GitTeam settings.");
+                return false;
             }
             
             // check if there are changes
-            bool existChanges = ThereAreAnyChangeInPaths(userData.CanChangePaths);
-            Debug.Log($"existChanges: {existChanges}");
+            bool existChanges = ThereAreAnyChangeInPaths(userData.WorkPaths);
+            if (!existChanges)
+            {
+                Log("Not commiting because there are no changes.");
+                return true;
+            }
             
             // get commit message
             var message = GetCommitMessage();
             if (message == null)
             {
-                return;
+                Log("Cancelling because a commit message wasn't provided.");
+                return false;
             }
-            Debug.Log(message);
             
             // get user branch
+            var branch = userData.DefaultBranch;
+
             // switch to or create that branch
+            CreateOrSwitchToBranch(branch);
+            
             // git add all user's paths
+            AddAllWorkPaths(userData);
+            
             // restore everything else
+            Log("--- Restore everything else ---");
+            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
+            var restoreOutput = GitUtils.Restore(".", gitRoot);
+            Log(restoreOutput);
+
+            return true;
         }
 
-        private static string GetCommitMessage()
+        private static void AddAllWorkPaths(UserData userData)
         {
-            var message = EditorInputDialog.Show(
-                "Commit message",
-                "Enter commit message for the current changes",
-                ""
-            );
-            return message;
+            Log("--- AddAllWorkPaths ---");
+            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
+            foreach (var workPath in userData.WorkPaths)
+            {
+                var addOutput = GitUtils.Add(workPath, gitRoot);
+                Log(addOutput);
+            }
         }
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
@@ -76,6 +119,32 @@ namespace GitTeam.Editor
             }
             
             return false;
+        }
+
+        private static void CreateOrSwitchToBranch(string branch)
+        {
+            Log("--- CreateOrSwitchToBranch ---");
+            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
+            try
+            {
+                var output = GitUtils.Switch(branch, gitRoot);
+                Log($"Switch output: {output}");
+            }
+            catch
+            {
+                var output = GitUtils.Switch($"-c {branch}", gitRoot); // create
+                Log($"Switch output: {output}");
+            }
+        }
+
+        private static string GetCommitMessage()
+        {
+            var message = EditorInputDialog.Show(
+                "Commit message",
+                "Enter a commit message for the current changes",
+                ""
+            );
+            return message;
         }
     }
 }
