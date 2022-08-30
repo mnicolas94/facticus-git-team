@@ -175,7 +175,7 @@ namespace GitTeam.Editor
             {
                 var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD {fixedPath}", GitRoot);
+                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD -- {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change

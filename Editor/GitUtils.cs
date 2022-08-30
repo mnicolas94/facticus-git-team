@@ -72,7 +72,23 @@ namespace GitTeam.Editor
         public static string Commit(string message, string gitRoot = "")
         {
             string gitCommand = $"commit -m \"{message}\"";
-            return RunGitCommandMergeOutputs(gitCommand, gitRoot);
+            try
+            {
+                var commitOutput = RunGitCommandMergeOutputs(gitCommand, gitRoot);
+                return commitOutput;
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("nothing to commit"))
+                {
+                    // it's not an error
+                    return "nothing to commit";
+                }
+                else
+                {
+                    throw e;
+                }
+            }
         }
         
         public static string Push(string gitRoot = "")
