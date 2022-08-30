@@ -27,19 +27,19 @@ namespace GitTeam.Editor
     {
         [SerializeField] private string _userName;
         [SerializeField] private string _defaultBranch;
-        [SerializeField] private List<string> _canChangePaths;
+        [SerializeField] private List<string> _workPaths;
 
         public string UserName => _userName;
 
         public string DefaultBranch => _defaultBranch;
 
-        public List<string> CanChangePaths => _canChangePaths;
+        public List<string> WorkPaths => _workPaths;
 
         public void Deconstruct(out string userName, out string defaultBranch, out List<string> mutablePaths)
         {
             userName = _userName;
             defaultBranch = _defaultBranch;
-            mutablePaths = _canChangePaths;
+            mutablePaths = _workPaths;
         }
     }
 }

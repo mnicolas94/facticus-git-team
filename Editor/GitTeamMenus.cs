@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
-using Utils.Editor;
 using Debug = UnityEngine.Debug;
 
 namespace GitTeam.Editor
@@ -116,13 +115,13 @@ namespace GitTeam.Editor
         {
             var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
             
-            GitUtils.RunGitCommand("update-index --refresh", gitRoot);
+            GitUtils.RunGitCommandThrowException("update-index --refresh", gitRoot);
 
             foreach (var path in paths)
             {
                 var fixedPath = path.Replace(gitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommand($"diff-index HEAD {fixedPath}", gitRoot);
+                var output = GitUtils.RunGitCommandThrowException($"diff-index HEAD {fixedPath}", gitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
