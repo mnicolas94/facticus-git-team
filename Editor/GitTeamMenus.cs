@@ -80,9 +80,14 @@ namespace GitTeam.Editor
             // git add all user's paths
             AddAllWorkPaths(userData);
             
-            // restore everything else
-            Log("--- Restore everything else ---");
+            // git commit
+            Log("--- COMMIT changes ---");
             var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
+            var commitOutput = GitUtils.Commit(message, gitRoot);
+            Log(commitOutput);
+            
+            // restore everything else
+            Log("--- RESTORE everything else ---");
             var restoreOutput = GitUtils.Restore(".", gitRoot);
             Log(restoreOutput);
 
