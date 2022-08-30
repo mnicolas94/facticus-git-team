@@ -9,6 +9,7 @@ namespace GitTeam.Editor
     public class GitTeamConfig : ScriptableObjectSingleton<GitTeamConfig>
     {
         [SerializeField] private string _gitProjectRoot;
+        [SerializeField] private string _defaultBranch;
         [SerializeField] private List<UserData> _usersData;
 
         public string GitProjectRoot
@@ -20,6 +21,8 @@ namespace GitTeam.Editor
                 return pathIsFine ? root : $"{root}/";
             }
         }
+
+        public string DefaultBranch => _defaultBranch;
 
         public List<UserData> UsersData => _usersData;
 

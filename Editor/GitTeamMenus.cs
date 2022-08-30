@@ -9,6 +9,8 @@ namespace GitTeam.Editor
     {
         private static List<string> _outputs;
 
+        private static string GitRoot => GitTeamConfig.Instance.GitProjectRoot;
+
         private static void BeginOutputsLogging()
         {
             if (_outputs == null)
@@ -31,32 +33,74 @@ namespace GitTeam.Editor
         }
         
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
-        public static void Pull()
+        public static void PullMenu()
         {
             BeginOutputsLogging();
             Log("--- PULL ---");
             Log("");
             try
             {
-                bool success = CommitCurrentChanges();
+                Pull(out _);
             }
             finally
             {
+                Log("");
                 EndOutputsLogging();
+            }
+        }
+        
+        [MenuItem("Tools/Facticus/GitTeam/Pull")]
+        public static void PushMenu()
+        {
+            BeginOutputsLogging();
+            Log("--- PUSH ---");
+            Log("");
+            try
+            {
+                Pull(out var userData);
+                var pushOutput = GitUtils.RunGitCommandThrowException($"push -u origin {userData.DefaultBranch}", GitRoot);
+                Log(pushOutput);
+            }
+            finally
+            {
+                Log("");
+                EndOutputsLogging();
+            }
+        }
+        
+        private static void Pull(out UserData userData)
+        {
+            bool commitSuccess = CommitCurrentChanges(out userData);
+            if (commitSuccess)
+            {
+                var defaultBranch = GitTeamConfig.Instance.DefaultBranch;
+                var userBranch = userData.DefaultBranch;
+                // switch to project's default branch
+                Log(GitUtils.Switch(defaultBranch, GitRoot));
                 
+                // pull
+                Log(GitUtils.Pull(GitRoot));
+                
+                // switch back to the user branch
+                Log(GitUtils.Switch(userBranch, GitRoot));
+                
+                // merge
+                var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
+                var mergeOutput = GitUtils.RunGitCommandThrowException(
+                    $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
+                Log(mergeOutput);
             }
         }
 
-        private static bool CommitCurrentChanges()
+        private static bool CommitCurrentChanges(out UserData userData)
         {
             Log("--- CommitCurrentChanges ---");
             // get user
             var userName = GitUtils.GetUserName();
-            var existsUser = GitTeamConfig.Instance.TryFindByName(userName, out var userData);
+            var existsUser = GitTeamConfig.Instance.TryFindByName(userName, out userData);
 
             if (!existsUser)
             {
-                // mostrar error
                 Log($"User {userName} does not exist in GitTeam settings.");
                 return false;
             }
@@ -88,13 +132,12 @@ namespace GitTeam.Editor
             
             // git commit
             Log("--- COMMIT changes ---");
-            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
-            var commitOutput = GitUtils.Commit(message, gitRoot);
+            var commitOutput = GitUtils.Commit(message, GitRoot);
             Log(commitOutput);
             
             // restore everything else
             Log("--- RESTORE everything else ---");
-            var restoreOutput = GitUtils.Restore(".", gitRoot);
+            var restoreOutput = GitUtils.Restore(".", GitRoot);
             Log(restoreOutput);
 
             return true;
@@ -103,26 +146,24 @@ namespace GitTeam.Editor
         private static void AddAllWorkPaths(UserData userData)
         {
             Log("--- AddAllWorkPaths ---");
-            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
             foreach (var workPath in userData.WorkPaths)
             {
-                var fixedWorkPath = workPath.Replace(gitRoot, "");
-                var addOutput = GitUtils.Add(fixedWorkPath, gitRoot);
+                var fixedWorkPath = workPath.Replace(GitRoot, "");
+                var addOutput = GitUtils.Add(fixedWorkPath, GitRoot);
                 Log(addOutput);
             }
         }
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
-            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
             
-            GitUtils.RunGitCommandThrowException("update-index --refresh", gitRoot);
+            GitUtils.RunGitCommandThrowException("update-index --refresh", GitRoot);
 
             foreach (var path in paths)
             {
-                var fixedPath = path.Replace(gitRoot, "");
+                var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommandThrowException($"diff-index HEAD {fixedPath}", gitRoot);
+                var output = GitUtils.RunGitCommandThrowException($"diff-index HEAD {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
@@ -136,15 +177,14 @@ namespace GitTeam.Editor
         private static void CreateOrSwitchToBranch(string branch)
         {
             Log("--- CreateOrSwitchToBranch ---");
-            var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
             try
             {
-                var output = GitUtils.Switch(branch, gitRoot);
+                var output = GitUtils.Switch(branch, GitRoot);
                 Log($"Switch output: {output}");
             }
             catch
             {
-                var output = GitUtils.Switch($"-c {branch}", gitRoot); // create
+                var output = GitUtils.Switch($"-c {branch}", GitRoot); // create
                 Log($"Switch output: {output}");
             }
         }

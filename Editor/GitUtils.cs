@@ -40,7 +40,7 @@ namespace GitTeam.Editor
             };
             try {
                 process.Start();  // Try to start it, catching any exceptions if it fails
-            } catch (Exception e) {
+            } catch (Exception) {
                 // For now just assume its failed cause it can't find git.
                 Debug.LogError("Git is not set-up correctly, required to be on PATH, and to be a git project.");
                 throw;
