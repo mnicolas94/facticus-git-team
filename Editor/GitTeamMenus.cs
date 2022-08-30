@@ -153,10 +153,19 @@ namespace GitTeam.Editor
             Log("--- AddAllWorkPaths ---");
             foreach (var workPath in userData.WorkPaths)
             {
-                var fixedWorkPath = workPath.Replace(GitRoot, "");
-                var addOutput = GitUtils.Add(fixedWorkPath, GitRoot);
+                var relativeWorkPath = MakePathRelativeToRoot(workPath);
+                var addOutput = GitUtils.Add(relativeWorkPath, GitRoot);
                 Log(addOutput);
             }
+        }
+
+        private static string MakePathRelativeToRoot(string workPath)
+        {
+            if (GitRoot == "")
+            {
+                return workPath;
+            }
+            return workPath.Replace(GitRoot, "");
         }
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
@@ -173,9 +182,9 @@ namespace GitTeam.Editor
 
             foreach (var path in paths)
             {
-                var fixedPath = path.Replace(GitRoot, "");
-                fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD -- {fixedPath}", GitRoot);
+                var relativePath = MakePathRelativeToRoot(path);
+                relativePath = relativePath.Trim('\\', '/');
+                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD -- {relativePath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
