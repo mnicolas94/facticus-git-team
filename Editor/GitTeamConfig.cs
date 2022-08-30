@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Utils;
+using Utils; 
 
 namespace GitTeam.Editor
 {
@@ -11,7 +11,15 @@ namespace GitTeam.Editor
         [SerializeField] private string _gitProjectRoot;
         [SerializeField] private List<UserData> _usersData;
 
-        public string GitProjectRoot => _gitProjectRoot;
+        public string GitProjectRoot
+        {
+            get
+            {
+                var root = _gitProjectRoot.Replace("\\", "/");
+                var pathIsFine = root == "" || root.EndsWith("/");
+                return pathIsFine ? root : $"{root}/";
+            }
+        }
 
         public List<UserData> UsersData => _usersData;
 
