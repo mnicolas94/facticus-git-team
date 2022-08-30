@@ -57,7 +57,7 @@ namespace GitTeam.Editor
             if (hadErrors)
             {
                 Debug.Log($"Exit code: {exitCode}");    
-                throw new Exception(errorOutput);
+                throw new Exception($"{output}\n{errorOutput}");
             }
 
             return (output, errorOutput);  // Return the output from git.

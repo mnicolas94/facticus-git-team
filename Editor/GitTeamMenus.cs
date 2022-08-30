@@ -32,15 +32,6 @@ namespace GitTeam.Editor
             Debug.Log(bigLog);
         }
 
-        [MenuItem("Tools/Facticus/GitTeam/Test")]
-        public static void Test()
-        {
-//            var (output, errorOutput) = GitUtils.RunGitCommand("status", GitRoot);
-            var (output, errorOutput) = GitUtils.RunGitCommand("switch -c asd", GitRoot);
-            Debug.Log(output);
-            Debug.Log(errorOutput);
-        }
-
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
         public static void PullMenu()
         {
