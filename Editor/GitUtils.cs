@@ -71,7 +71,7 @@ namespace GitTeam.Editor
         
         public static string Commit(string message, string gitRoot = "")
         {
-            string gitCommand = $"commit -m {message}";
+            string gitCommand = $"commit -m \"{message}\"";
             return RunGitCommandMergeOutputs(gitCommand, gitRoot);
         }
         
