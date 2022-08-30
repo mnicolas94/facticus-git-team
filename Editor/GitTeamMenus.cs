@@ -57,9 +57,12 @@ namespace GitTeam.Editor
             Log("");
             try
             {
-                Pull(out var userData);
-                var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
-                Log(pushOutput);
+                bool commitSuccess = Pull(out var userData);
+                if (commitSuccess)
+                {
+                    var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
+                    Log(pushOutput);
+                }
             }
             finally
             {
@@ -68,7 +71,7 @@ namespace GitTeam.Editor
             }
         }
         
-        private static void Pull(out UserData userData)
+        private static bool Pull(out UserData userData)
         {
             bool commitSuccess = CommitCurrentChanges(out userData);
             if (commitSuccess)
@@ -90,6 +93,8 @@ namespace GitTeam.Editor
                     $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
                 Log(mergeOutput);
             }
+
+            return commitSuccess;
         }
 
         private static bool CommitCurrentChanges(out UserData userData)
@@ -156,13 +161,12 @@ namespace GitTeam.Editor
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
-            
-            GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
 
             foreach (var path in paths)
             {
                 var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
+                GitUtils.RunGitCommandMergeOutputs($"update-index --refresh {fixedPath}", GitRoot);
                 var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
