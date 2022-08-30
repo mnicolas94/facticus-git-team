@@ -37,8 +37,15 @@ namespace GitTeam.Editor
             BeginOutputsLogging();
             Log("--- PULL ---");
             Log("");
-            bool success = CommitCurrentChanges();
-            EndOutputsLogging();
+            try
+            {
+                bool success = CommitCurrentChanges();
+            }
+            finally
+            {
+                EndOutputsLogging();
+                
+            }
         }
 
         private static bool CommitCurrentChanges()
