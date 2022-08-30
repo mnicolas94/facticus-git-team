@@ -31,7 +31,7 @@ namespace GitTeam.Editor
             string bigLog = String.Join("\n", _outputs);
             Debug.Log(bigLog);
         }
-        
+
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
         public static void PullMenu()
         {
@@ -49,7 +49,7 @@ namespace GitTeam.Editor
             }
         }
         
-        [MenuItem("Tools/Facticus/GitTeam/Pull")]
+        [MenuItem("Tools/Facticus/GitTeam/Push")]
         public static void PushMenu()
         {
             BeginOutputsLogging();
@@ -57,9 +57,12 @@ namespace GitTeam.Editor
             Log("");
             try
             {
-                Pull(out var userData);
-                var pushOutput = GitUtils.RunGitCommandThrowException($"push -u origin {userData.DefaultBranch}", GitRoot);
-                Log(pushOutput);
+                bool commitSuccess = Pull(out var userData);
+                if (commitSuccess)
+                {
+                    var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
+                    Log(pushOutput);
+                }
             }
             finally
             {
@@ -68,7 +71,7 @@ namespace GitTeam.Editor
             }
         }
         
-        private static void Pull(out UserData userData)
+        private static bool Pull(out UserData userData)
         {
             bool commitSuccess = CommitCurrentChanges(out userData);
             if (commitSuccess)
@@ -86,10 +89,12 @@ namespace GitTeam.Editor
                 
                 // merge
                 var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
-                var mergeOutput = GitUtils.RunGitCommandThrowException(
+                var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
                     $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
                 Log(mergeOutput);
             }
+
+            return commitSuccess;
         }
 
         private static bool CommitCurrentChanges(out UserData userData)
@@ -156,14 +161,21 @@ namespace GitTeam.Editor
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
-            
-            GitUtils.RunGitCommandThrowException("update-index --refresh", GitRoot);
+            try
+            {
+                // this is needed in some cases to allow "diff-index" command bellow to work properly
+                GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
+            }
+            catch
+            {
+                // ignored
+            }
 
             foreach (var path in paths)
             {
                 var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommandThrowException($"diff-index HEAD {fixedPath}", GitRoot);
+                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
