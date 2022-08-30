@@ -31,7 +31,16 @@ namespace GitTeam.Editor
             string bigLog = String.Join("\n", _outputs);
             Debug.Log(bigLog);
         }
-        
+
+        [MenuItem("Tools/Facticus/GitTeam/Test")]
+        public static void Test()
+        {
+//            var (output, errorOutput) = GitUtils.RunGitCommand("status", GitRoot);
+            var (output, errorOutput) = GitUtils.RunGitCommand("switch -c asd", GitRoot);
+            Debug.Log(output);
+            Debug.Log(errorOutput);
+        }
+
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
         public static void PullMenu()
         {
@@ -49,7 +58,7 @@ namespace GitTeam.Editor
             }
         }
         
-        [MenuItem("Tools/Facticus/GitTeam/Pull")]
+        [MenuItem("Tools/Facticus/GitTeam/Push")]
         public static void PushMenu()
         {
             BeginOutputsLogging();
@@ -58,7 +67,7 @@ namespace GitTeam.Editor
             try
             {
                 Pull(out var userData);
-                var pushOutput = GitUtils.RunGitCommandThrowException($"push -u origin {userData.DefaultBranch}", GitRoot);
+                var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
                 Log(pushOutput);
             }
             finally
@@ -86,7 +95,7 @@ namespace GitTeam.Editor
                 
                 // merge
                 var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
-                var mergeOutput = GitUtils.RunGitCommandThrowException(
+                var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
                     $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
                 Log(mergeOutput);
             }
@@ -157,13 +166,13 @@ namespace GitTeam.Editor
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
             
-            GitUtils.RunGitCommandThrowException("update-index --refresh", GitRoot);
+            GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
 
             foreach (var path in paths)
             {
                 var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                var output = GitUtils.RunGitCommandThrowException($"diff-index HEAD {fixedPath}", GitRoot);
+                var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
