@@ -106,7 +106,8 @@ namespace GitTeam.Editor
             var gitRoot = GitTeamConfig.Instance.GitProjectRoot;
             foreach (var workPath in userData.WorkPaths)
             {
-                var addOutput = GitUtils.Add(workPath, gitRoot);
+                var fixedWorkPath = workPath.Replace(gitRoot, "");
+                var addOutput = GitUtils.Add(fixedWorkPath, gitRoot);
                 Log(addOutput);
             }
         }
