@@ -161,7 +161,15 @@ namespace GitTeam.Editor
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
-            GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
+            try
+            {
+                // this is needed in some cases to allow "diff-index" command bellow to work properly
+                GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
+            }
+            catch
+            {
+                // ignored
+            }
 
             foreach (var path in paths)
             {
