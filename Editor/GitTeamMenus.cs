@@ -161,12 +161,12 @@ namespace GitTeam.Editor
 
         private static bool ThereAreAnyChangeInPaths(List<string> paths)
         {
+            GitUtils.RunGitCommandMergeOutputs("update-index --refresh", GitRoot);
 
             foreach (var path in paths)
             {
                 var fixedPath = path.Replace(GitRoot, "");
                 fixedPath = fixedPath.Trim('\\', '/');
-                GitUtils.RunGitCommandMergeOutputs($"update-index --refresh {fixedPath}", GitRoot);
                 var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD {fixedPath}", GitRoot);
                 if (!String.IsNullOrEmpty(output))
                 {
