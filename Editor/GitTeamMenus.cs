@@ -40,7 +40,26 @@ namespace GitTeam.Editor
             Log("");
             try
             {
-                Pull(out _);
+                bool commitSuccess = CommitCurrentChanges(out var userData);
+                if (commitSuccess)
+                {
+                    var defaultBranch = GitTeamConfig.Instance.DefaultBranch;
+                    var userBranch = userData.DefaultBranch;
+                    // switch to project's default branch
+                    Log(GitUtils.Switch(defaultBranch, GitRoot));
+                
+                    // pull
+                    Log(GitUtils.Pull(GitRoot));
+                
+                    // switch back to the user branch
+                    Log(GitUtils.Switch(userBranch, GitRoot));
+                
+                    // merge
+                    var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
+                    var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
+                        $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
+                    Log(mergeOutput);
+                }
             }
             finally
             {
@@ -57,7 +76,7 @@ namespace GitTeam.Editor
             Log("");
             try
             {
-                bool commitSuccess = Pull(out var userData);
+                bool commitSuccess = CommitCurrentChanges(out var userData);
                 if (commitSuccess)
                 {
                     var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
@@ -69,32 +88,6 @@ namespace GitTeam.Editor
                 Log("");
                 EndOutputsLogging();
             }
-        }
-        
-        private static bool Pull(out UserData userData)
-        {
-            bool commitSuccess = CommitCurrentChanges(out userData);
-            if (commitSuccess)
-            {
-                var defaultBranch = GitTeamConfig.Instance.DefaultBranch;
-                var userBranch = userData.DefaultBranch;
-                // switch to project's default branch
-                Log(GitUtils.Switch(defaultBranch, GitRoot));
-                
-                // pull
-                Log(GitUtils.Pull(GitRoot));
-                
-                // switch back to the user branch
-                Log(GitUtils.Switch(userBranch, GitRoot));
-                
-                // merge
-                var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
-                var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
-                    $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
-                Log(mergeOutput);
-            }
-
-            return commitSuccess;
         }
 
         private static bool CommitCurrentChanges(out UserData userData)
@@ -205,6 +198,7 @@ namespace GitTeam.Editor
             }
             catch
             {
+                // TODO: ignore exception due to already being in that branch
                 var output = GitUtils.Switch($"-c {branch}", GitRoot); // create
                 Log($"Switch output: {output}");
             }

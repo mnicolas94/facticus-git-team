@@ -1,6 +1,5 @@
 ﻿﻿using System;
 using System.Diagnostics;
- using PlasticPipe.Certificates;
  using Debug = UnityEngine.Debug;
 
 namespace GitTeam.Editor
