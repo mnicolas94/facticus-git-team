@@ -93,6 +93,10 @@ namespace GitTeam.Editor
         private static bool CommitCurrentChanges(out UserData userData)
         {
             Log("--- CommitCurrentChanges ---");
+            
+            Log("Saving assets before commit...");
+            AssetDatabase.SaveAssets();
+            
             // get user
             var userName = GitUtils.GetUserName();
             var existsUser = GitTeamConfig.Instance.TryFindByName(userName, out userData);
