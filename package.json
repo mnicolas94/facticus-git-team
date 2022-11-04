@@ -1,6 +1,6 @@
 {
   "name": "com.facticus.git-team",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "displayName": "Git Team",
   "description": "Utils context menus for collaboration with git",
   "unity": "2021.1",
