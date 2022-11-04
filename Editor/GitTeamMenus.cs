@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
+using Utils.Editor;
 using Debug = UnityEngine.Debug;
 
 namespace GitTeam.Editor
@@ -195,26 +196,41 @@ namespace GitTeam.Editor
         private static void CreateOrSwitchToBranch(string branch)
         {
             Log("--- CreateOrSwitchToBranch ---");
-            try
+            bool alreadyOnBranch = GitUtils.GetCurrentBranch(GitRoot) == branch;
+            if (alreadyOnBranch)
             {
-                var output = GitUtils.Switch(branch, GitRoot);
-                Log($"Switch output: {output}");
+                Log($"Already on branch {branch}");
             }
-            catch
+            else
             {
-                // TODO: ignore exception due to already being in that branch
-                var output = GitUtils.Switch($"-c {branch}", GitRoot); // create
-                Log($"Switch output: {output}");
+                bool exists = GitUtils.ExistsBranch(branch);
+                if (exists)
+                {
+                    var output = GitUtils.Switch(branch, GitRoot);
+                    Log($"Switch output: {output}");
+                }
+                else
+                {
+                    var output = GitUtils.Switch($"-c {branch}", GitRoot); // create
+                    Log($"Switch output: {output}");
+                }
             }
         }
+        
 
         private static string GetCommitMessage()
         {
-            var message = EditorInputDialog.Show(
+            string message = null;
+            
+            EditorInputDialog.Show<StringContainer>(
                 "Commit message",
                 "Enter a commit message for the current changes",
-                ""
+                msg => message = msg.Value,
+                modal: true
             );
+
+            message = message == "" ? "---" : message;
+            
             return message;
         }
     }

@@ -1,5 +1,6 @@
 ﻿﻿using System;
 using System.Diagnostics;
+ using System.Linq;
  using Debug = UnityEngine.Debug;
 
 namespace GitTeam.Editor
@@ -108,6 +109,20 @@ namespace GitTeam.Editor
             return RunGitCommandMergeOutputs(gitCommand, gitRoot);
         }
 
+        public static bool ExistsBranch(string branch, string gitRoot = "")
+        {
+            string gitCommand = $"branch";
+            var branchesString = RunGitCommandMergeOutputs(gitCommand, gitRoot);
+            var branches = branchesString.Split('\n');
+            return branches.Contains(branch);
+        }
+        
+        public static string GetCurrentBranch(string gitRoot = "")
+        {
+            string gitCommand = $"branch --show-current";
+            return RunGitCommandMergeOutputs(gitCommand, gitRoot);
+        }
+        
         public static string Switch(string switchTo, string gitRoot = "")
         {
             string gitCommand = $"switch {switchTo}";
