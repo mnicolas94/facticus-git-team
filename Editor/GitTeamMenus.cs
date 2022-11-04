@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 using Utils.Editor;
 using Debug = UnityEngine.Debug;
 
@@ -27,9 +28,15 @@ namespace GitTeam.Editor
             _outputs.Add(log);
         }
 
+        private static string GetLog()
+        {
+            string log = String.Join("\n", _outputs);
+            return log;
+        }
+
         private static void EndOutputsLogging()
         {
-            string bigLog = String.Join("\n", _outputs);
+            var bigLog = GetLog();
             Debug.Log(bigLog);
         }
 
@@ -56,10 +63,21 @@ namespace GitTeam.Editor
                     Log(GitUtils.Switch(userBranch, GitRoot));
                 
                     // merge
-                    var mergeMessage = $"Automatic merge: {defaultBranch} -> {userBranch} from GitTeam";
-                    var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
-                        $"merge {defaultBranch} --no-edit -m \"{mergeMessage}\"", GitRoot);
-                    Log(mergeOutput);
+                    bool success = Merge(userBranch, defaultBranch);
+                    if (!success)
+                    {
+                        // TODO mostrar cartel de q no se puede hacer pull por conflictos
+                        EditorInputDialog.Show(
+                            "Merge conflicts",
+                            $"Can't pull. Conflicts would happen if {defaultBranch} merges into {userBranch}. " +
+                            $"Please notify it to someone in your team that could fix this.",
+                            new List<(string, Action<ScriptableObject>)>
+                            {
+                                ("Ok", null),
+                                ("Copy log", _ => EditorGUIUtility.systemCopyBuffer = GetLog())
+                            }
+                        );
+                    }
                 }
             }
             finally
@@ -68,7 +86,36 @@ namespace GitTeam.Editor
                 EndOutputsLogging();
             }
         }
-        
+
+        private static bool Merge(string current, string toMerge)
+        {
+            // check conflicts
+            bool existConflicts = false;
+            try
+            {
+                GitUtils.RunGitCommandMergeOutputs($"merge --no-commit --no-ff {toMerge}", GitRoot);
+            }
+            catch
+            {
+                existConflicts = true;
+            }
+            finally
+            {
+                GitUtils.RunGitCommandMergeOutputs($"merge --abort", GitRoot);
+            }
+
+            if (!existConflicts)
+            {
+                var mergeMessage = $"Automatic merge: {toMerge} -> {current} from GitTeam";
+                var mergeOutput = GitUtils.RunGitCommandMergeOutputs(
+                    $"merge {toMerge} --no-edit -m \"{mergeMessage}\"", GitRoot);
+                Log(mergeOutput);
+            }
+
+            bool success = !existConflicts;
+            return success;
+        }
+
         [MenuItem("Tools/Facticus/GitTeam/Push")]
         public static void PushMenu()
         {
