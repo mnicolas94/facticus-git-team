@@ -250,7 +250,7 @@ namespace GitTeam.Editor
             }
             else
             {
-                bool exists = GitUtils.ExistsBranch(branch);
+                bool exists = GitUtils.ExistsBranch(branch, GitRoot);
                 if (exists)
                 {
                     var output = GitUtils.Switch(branch, GitRoot);
