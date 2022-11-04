@@ -114,7 +114,7 @@ namespace GitTeam.Editor
             string gitCommand = $"branch";
             var branchesString = RunGitCommandMergeOutputs(gitCommand, gitRoot);
             var branches = branchesString.Split('\n');
-            var trimmed = branches.ToList().ConvertAll(b => b.Trim());
+            var trimmed = branches.ToList().ConvertAll(b => b.Trim(' ', '*'));
             return trimmed.Contains(branch);
         }
         
