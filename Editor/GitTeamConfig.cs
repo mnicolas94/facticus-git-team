@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Utils;
 
 namespace GitTeam.Editor
@@ -38,19 +39,24 @@ namespace GitTeam.Editor
     {
         [SerializeField] private string _userName;
         [SerializeField] private string _defaultBranch;
-        [SerializeField] private List<string> _workPaths;
+        [FormerlySerializedAs("_workPaths")] [SerializeField] private List<string> _includePaths;
+        [SerializeField] private List<string> _excludePaths;
 
         public string UserName => _userName;
 
         public string DefaultBranch => _defaultBranch;
 
-        public List<string> WorkPaths => _workPaths;
+        public List<string> IncludePaths => _includePaths;
 
-        public void Deconstruct(out string userName, out string defaultBranch, out List<string> mutablePaths)
+        public List<string> ExcludePaths => _excludePaths;
+
+        public void Deconstruct(out string userName, out string defaultBranch,
+            out List<string> includePaths, out List<string> excludePaths)
         {
             userName = _userName;
             defaultBranch = _defaultBranch;
-            mutablePaths = _workPaths;
+            includePaths = _includePaths;
+            excludePaths = _excludePaths;
         }
     }
 }

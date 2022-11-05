@@ -69,6 +69,12 @@ namespace GitTeam.Editor
             return RunGitCommandMergeOutputs(gitCommand, gitRoot);
         }
         
+        public static string Reset(string whatToReset, string gitRoot = "")
+        {
+            string gitCommand = $"reset {whatToReset}";
+            return RunGitCommandMergeOutputs(gitCommand, gitRoot);
+        }
+        
         public static string Commit(string message, string gitRoot = "")
         {
             string gitCommand = $"commit -m \"{message}\"";

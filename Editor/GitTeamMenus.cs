@@ -9,9 +9,11 @@ namespace GitTeam.Editor
 {
     public static class GitTeamMenus
     {
-        private static List<string> _outputs;
-
         private static string GitRoot => GitTeamConfig.Instance.GitProjectRoot;
+        
+#region Logging
+
+        private static List<string> _outputs;
 
         private static void BeginOutputsLogging()
         {
@@ -39,6 +41,10 @@ namespace GitTeam.Editor
             var bigLog = GetLog();
             Debug.Log(bigLog);
         }
+
+#endregion
+
+#region Menu items
 
         [MenuItem("Tools/Facticus/GitTeam/Pull")]
         public static void PullMenu()
@@ -118,6 +124,10 @@ namespace GitTeam.Editor
             }
         }
 
+#endregion
+
+#region User feedback
+
         private static void ShowErrorMessage(string title, string message)
         {
             EditorInputDialog.Show(
@@ -139,6 +149,10 @@ namespace GitTeam.Editor
             );
         }
 
+#endregion
+
+#region Git things        
+        
         private static bool Merge(string current, string toMerge)
         {
             // check conflicts
@@ -186,7 +200,7 @@ namespace GitTeam.Editor
             }
             
             // check if there are changes
-            bool existChanges = ThereAreAnyChangeInPaths(userData.WorkPaths);
+            bool existChanges = ThereAreAnyChangeInPaths(userData.IncludePaths);
             if (!existChanges)
             {
                 Log("Not commiting because there are no changes.");
@@ -226,10 +240,17 @@ namespace GitTeam.Editor
         private static void AddAllWorkPaths(UserData userData)
         {
             Log("--- AddAllWorkPaths ---");
-            foreach (var workPath in userData.WorkPaths)
+            foreach (var includePath in userData.IncludePaths)
             {
-                var relativeWorkPath = MakePathRelativeToRoot(workPath);
-                var addOutput = GitUtils.Add(relativeWorkPath, GitRoot);
+                var relativePath = MakePathRelativeToRoot(includePath);
+                var addOutput = GitUtils.Add(relativePath, GitRoot);
+                Log(addOutput);
+            }
+            
+            foreach (var excludePath in userData.ExcludePaths)
+            {
+                var relativePath = MakePathRelativeToRoot(excludePath);
+                var addOutput = GitUtils.Reset(relativePath, GitRoot);
                 Log(addOutput);
             }
         }
@@ -292,10 +313,11 @@ namespace GitTeam.Editor
                     var output = GitUtils.Switch($"-c {branch}", GitRoot); // create
                     Log($"Switch output: {output}");
                 }
+                
+                // TODO check for error where files are staged for commit. Unstage them
             }
         }
         
-
         private static string GetCommitMessage()
         {
             string message = null;
@@ -311,5 +333,7 @@ namespace GitTeam.Editor
             
             return message;
         }
+        
+#endregion
     }
 }
