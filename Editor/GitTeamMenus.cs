@@ -55,36 +55,88 @@ namespace GitTeam.Editor
                     var userBranch = userData.DefaultBranch;
                     // switch to project's default branch
                     Log(GitUtils.Switch(defaultBranch, GitRoot));
-                
+
                     // pull
                     Log(GitUtils.Pull(GitRoot));
-                
+
                     // switch back to the user branch
                     Log(GitUtils.Switch(userBranch, GitRoot));
-                
+
                     // merge
                     bool success = Merge(userBranch, defaultBranch);
                     if (!success)
                     {
-                        // TODO mostrar cartel de q no se puede hacer pull por conflictos
-                        EditorInputDialog.Show(
-                            "Merge conflicts",
+                        var title = "Merge conflicts";
+                        var message =
                             $"Can't pull. Conflicts would happen if {defaultBranch} merges into {userBranch}. " +
-                            $"Please notify it to someone in your team that could fix this.",
-                            new List<(string, Action<ScriptableObject>)>
-                            {
-                                ("Ok", null),
-                                ("Copy log", _ => EditorGUIUtility.systemCopyBuffer = GetLog())
-                            }
-                        );
+                            "Please notify it to someone in your team that could fix this.";
+                        ShowErrorMessage(title, message);
+                    }
+                    else
+                    {
+                        ShowSuccessMessage("Success", "Pull successful!");
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                ShowErrorMessage("Error!", e.Message);
             }
             finally
             {
                 Log("");
                 EndOutputsLogging();
             }
+        }
+
+        [MenuItem("Tools/Facticus/GitTeam/Push")]
+        public static void PushMenu()
+        {
+            BeginOutputsLogging();
+            Log("--- PUSH ---");
+            Log("");
+            try
+            {
+                bool commitSuccess = CommitCurrentChanges(out var userData);
+                if (commitSuccess)
+                {
+                    var pushOutput =
+                        GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
+                    Log(pushOutput);
+                }
+
+                ShowSuccessMessage("Success", "Push successful!");
+            }
+            catch (Exception e)
+            {
+                ShowErrorMessage("Error!", e.Message);
+            }
+            finally
+            {
+                Log("");
+                EndOutputsLogging();
+            }
+        }
+
+        private static void ShowErrorMessage(string title, string message)
+        {
+            EditorInputDialog.Show(
+                title,
+                message,
+                new List<(string, Action<ScriptableObject>)>
+                {
+                    ("Ok", null),
+                    ("Copy log", _ => EditorGUIUtility.systemCopyBuffer = $"{message}\n{GetLog()}")
+                }
+            );
+        }
+        
+        private static void ShowSuccessMessage(string title, string message)
+        {
+            EditorInputDialog.ShowMessage(
+                title,
+                message
+            );
         }
 
         private static bool Merge(string current, string toMerge)
@@ -114,28 +166,6 @@ namespace GitTeam.Editor
 
             bool success = !existConflicts;
             return success;
-        }
-
-        [MenuItem("Tools/Facticus/GitTeam/Push")]
-        public static void PushMenu()
-        {
-            BeginOutputsLogging();
-            Log("--- PUSH ---");
-            Log("");
-            try
-            {
-                bool commitSuccess = CommitCurrentChanges(out var userData);
-                if (commitSuccess)
-                {
-                    var pushOutput = GitUtils.RunGitCommandMergeOutputs($"push -u origin {userData.DefaultBranch}", GitRoot);
-                    Log(pushOutput);
-                }
-            }
-            finally
-            {
-                Log("");
-                EndOutputsLogging();
-            }
         }
 
         private static bool CommitCurrentChanges(out UserData userData)
