@@ -46,7 +46,7 @@ namespace GitTeam.Editor
 
 #region Menu items
 
-        [MenuItem("Tools/Facticus/GitTeam/Pull")]
+        [MenuItem("Tools/Facticus/GitTeam/Pull", false, 0)]
         public static void PullMenu()
         {
             BeginOutputsLogging();
@@ -95,7 +95,7 @@ namespace GitTeam.Editor
             }
         }
 
-        [MenuItem("Tools/Facticus/GitTeam/Push")]
+        [MenuItem("Tools/Facticus/GitTeam/Push", false, 0)]
         public static void PushMenu()
         {
             BeginOutputsLogging();
@@ -121,6 +121,33 @@ namespace GitTeam.Editor
             {
                 Log("");
                 EndOutputsLogging();
+            }
+        }
+        
+        [MenuItem("Tools/Facticus/GitTeam/Execute command", false, 1000)]
+        public static void ExecuteCommand()
+        {
+            try
+            {
+                var command = EditorInputDialog.ShowModal<StringContainer>(
+                    "Run git command",
+                    "",
+                    "Execute"
+                    ).Value;
+                var startsWithGit = command.StartsWith("git ");
+                if (startsWithGit)
+                {
+                    command = command.Substring(3);
+                    command = command.Trim();
+                }
+
+                var output = GitUtils.RunGitCommandMergeOutputs(command, GitRoot);
+
+                ShowSuccessMessage("Success", $"Command executed successfully!\n\n{output}");
+            }
+            catch (Exception e)
+            {
+                ShowErrorMessage("Error!", e.Message);
             }
         }
 
