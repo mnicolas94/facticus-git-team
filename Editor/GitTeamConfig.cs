@@ -74,5 +74,21 @@ namespace GitTeam.Editor
                 _excludePaths.Add(path);
             }
         }
+        
+        public void RemoveIncludePath(string path)
+        {
+            if (_includePaths.Contains(path))
+            {
+                _includePaths.Remove(path);
+            }
+        }
+        
+        public void RemoveExcludePath(string path)
+        {
+            if (_excludePaths.Contains(path))
+            {
+                _excludePaths.Remove(path);
+            }
+        }
     }
 }
