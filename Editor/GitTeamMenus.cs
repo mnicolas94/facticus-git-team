@@ -260,6 +260,7 @@ namespace GitTeam.Editor
                 var relativePath = MakePathRelativeToRoot(path);
                 relativePath = relativePath.Trim('\\', '/');
                 var output = GitUtils.RunGitCommandMergeOutputs($"diff-index HEAD -- {relativePath}", GitRoot);
+                output = output.Replace('\n', '');
                 if (!String.IsNullOrEmpty(output))
                 {
                     // there is a change
