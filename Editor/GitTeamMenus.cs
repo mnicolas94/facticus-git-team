@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Utils.Editor;
@@ -149,6 +151,98 @@ namespace GitTeam.Editor
             {
                 ShowErrorMessage("Error!", e.Message);
             }
+        }
+
+        [MenuItem("Assets/Facticus/GitTeam/Include", false, 1000)]
+        public static void IncludeAsset()
+        {
+            IncludeOrExcludeAsset(
+                user => user.IncludePaths,
+                (user, path) => user.IncludePath(path));
+        }
+        
+        [MenuItem("Assets/Facticus/GitTeam/Include", true, 1000)]
+        public static bool IncludeAssetMenuValidation()
+        {
+            return IncludeOrExcludeAssetMenuValidation(user => user.IncludePaths);
+        }
+        
+        [MenuItem("Assets/Facticus/GitTeam/Exclude", false, 1000)]
+        public static void ExcludeAsset()
+        {
+            IncludeOrExcludeAsset(
+                user => user.ExcludePaths,
+                (user, path) => user.ExcludePath(path));
+        }
+        
+        [MenuItem("Assets/Facticus/GitTeam/Exclude", true, 1000)]
+        public static bool ExcludeAssetMenuValidation()
+        {
+            return IncludeOrExcludeAssetMenuValidation(user => user.ExcludePaths);
+        }
+        
+        public static void IncludeOrExcludeAsset(
+            Func<UserData, List<string>> getPathsFunction,
+            Action<UserData, string> includeOrExcludeAction)
+        {
+            var guids = Selection.assetGUIDs;
+            var paths = guids.Select(AssetDatabase.GUIDToAssetPath).ToList();
+
+            var users = GitTeamConfig.Instance.UsersData
+                .Where(user => paths.Any(path => !getPathsFunction(user).Contains(path)))
+                .ToList();
+
+            var genericMenu = new GenericMenu();
+            foreach (var userData in users)
+            {
+                genericMenu.AddItem(
+                    new GUIContent(userData.UserName),
+                    false,
+                    () =>
+                    {
+                        Undo.RecordObject(GitTeamConfig.Instance, "Change include or exclude settings");
+                        foreach (var path in paths)
+                        {
+                            includeOrExcludeAction(userData, path);
+                        }
+                    });
+            }
+            genericMenu.AddItem(
+                new GUIContent("All"),
+                false,
+                () =>
+                {
+                    Undo.RecordObject(GitTeamConfig.Instance, "Change include or exclude settings");
+                    foreach (var userData in users)
+                    {
+                        foreach (var path in paths)
+                        {
+                            includeOrExcludeAction(userData, path);
+                        }
+                    }
+                });
+
+            var field = typeof ( Event ).GetField ( "s_Current", BindingFlags.Static | BindingFlags.NonPublic );
+            if ( field != null )
+            {
+                Event current = field.GetValue ( null ) as Event;
+                if ( current != null )
+                {
+                    var pos = current.mousePosition;
+                    genericMenu.DropDown(new Rect(pos.x, pos.y, 0, 0));
+                    genericMenu.ShowAsContext();
+                }
+            }
+        }
+        
+        public static bool IncludeOrExcludeAssetMenuValidation(Func<UserData, List<string>> getPathsFunction)
+        {
+            var guids = Selection.assetGUIDs;
+            var paths = guids.Select(AssetDatabase.GUIDToAssetPath);
+            var anyNotIncluded = paths.Any(path => 
+                GitTeamConfig.Instance.UsersData.Any(user => 
+                    !getPathsFunction(user).Contains(path)));
+            return anyNotIncluded;
         }
 
 #endregion

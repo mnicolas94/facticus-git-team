@@ -49,7 +49,7 @@ namespace GitTeam.Editor
         public List<string> IncludePaths => _includePaths;
 
         public List<string> ExcludePaths => _excludePaths;
-
+        
         public void Deconstruct(out string userName, out string defaultBranch,
             out List<string> includePaths, out List<string> excludePaths)
         {
@@ -57,6 +57,22 @@ namespace GitTeam.Editor
             defaultBranch = _defaultBranch;
             includePaths = _includePaths;
             excludePaths = _excludePaths;
+        }
+
+        public void IncludePath(string path)
+        {
+            if (!_includePaths.Contains(path))
+            {
+                _includePaths.Add(path);
+            }
+        }
+        
+        public void ExcludePath(string path)
+        {
+            if (!_excludePaths.Contains(path))
+            {
+                _excludePaths.Add(path);
+            }
         }
     }
 }
