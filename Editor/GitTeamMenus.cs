@@ -156,19 +156,7 @@ namespace GitTeam.Editor
         private static bool Merge(string current, string toMerge)
         {
             // check conflicts
-            bool existConflicts = false;
-            try
-            {
-                GitUtils.RunGitCommandMergeOutputs($"merge --no-commit --no-ff {toMerge}", GitRoot);
-            }
-            catch
-            {
-                existConflicts = true;
-            }
-            finally
-            {
-                GitUtils.RunGitCommandMergeOutputs($"merge --abort", GitRoot);
-            }
+            var existConflicts = GitUtils.CanMerge(toMerge, GitRoot);
 
             if (!existConflicts)
             {

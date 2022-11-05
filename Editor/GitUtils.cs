@@ -1,5 +1,6 @@
 ﻿﻿using System;
 using System.Diagnostics;
+ using System.IO;
  using System.Linq;
  using Debug = UnityEngine.Debug;
 
@@ -134,6 +135,36 @@ namespace GitTeam.Editor
         {
             string gitCommand = $"switch {switchTo}";
             return RunGitCommandMergeOutputs(gitCommand, gitRoot);
+        }
+        
+        public static bool CanMerge(string toMerge, string gitRoot = "")
+        {
+            bool existConflicts = false;
+            try
+            {
+                RunGitCommandMergeOutputs($"merge --no-commit --no-ff {toMerge}", gitRoot);
+            }
+            catch
+            {
+                existConflicts = true;
+            }
+            finally
+            {
+                var existsMergeInProcess = ExistsMergeInProcess(gitRoot);
+                if (existsMergeInProcess)
+                {
+                    RunGitCommandMergeOutputs($"merge --abort", gitRoot);
+                }
+            }
+
+            return existConflicts;
+        }
+
+        public static bool ExistsMergeInProcess(string gitRoot = "")
+        {
+            var mergeFile = Path.Combine(gitRoot, ".git", "MERGE_HEAD");
+            bool existsMergeInProcess = File.Exists(mergeFile);
+            return existsMergeInProcess;
         }
         
         public static string GetGitCommitHash(string gitRoot = "")
